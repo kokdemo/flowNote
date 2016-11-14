@@ -1,0 +1,288 @@
+<html class="no-js">
+
+<head>
+    <!-- <meta charset="utf-8"> -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FlowNote</title>
+    <!-- Set render engine for 360 browser -->
+    <meta name="renderer" content="webkit">
+    <!-- <link rel="icon" type="image/png" href="assets/i/favicon.png"> -->
+    <!-- <link rel="stylesheet" href="css/element.css"> -->
+    <!-- <link rel="stylesheet" href="css/normalize.css"> -->
+    <link rel="stylesheet" href="css/codemirror.css">
+    <link rel="stylesheet" href="css/semantic.min.css">
+    <style>
+        .ui.visible.left.sidebar~.fixed,
+        .ui.visible.left.sidebar~.pusher {
+            transform: none!important;
+            padding-left: 260px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app" class="ui bottom attached segment pushable">
+        <!-- <el-row>
+            <el-menu default-active="1" class="el-menu-demo" mode="horizontal">
+                <el-menu-item index="1">FlowNote</el-menu-item>
+                <el-menu-item index="2"><span @click='addFlow()'>New<span></el-menu-item>
+                <el-menu-item index="3">Export</el-menu-item>
+                <el-menu-item index="4">Github</el-menu-item>
+            </el-menu>
+        </el-row>
+        <el-row :gutter='10'>
+            <el-col :span="4">
+                <el-menu v-bind:default-active="load.name" class="el-menu-vertical">
+                    <el-menu-item v-bind:index="item.name" v-for="(item,index) in flows">{{item.name}}</el-menu-item>
+                </el-menu>
+            </el-col>
+            <el-col :span="20">
+                <el-row :gutter='10'>
+                    <el-col :span="6">
+                        <el-input placeholder="请输入名称" v-model="load.name">
+                        </el-input>
+                    </el-col>
+                    <el-col :span="14">
+                        <el-input placeholder="请输入备注" v-model="load.comment">
+                        </el-input>
+                    </el-col>
+                    <el-col :span="4">
+                        <el-row :gutter='5'>
+                            <el-col :span="12">
+                                <el-button :plain="true" type="info" icon="document" @click='saveFlow()'>保存</el-button>
+                            </el-col>
+                            <el-col :span="12">
+                                <el-button :plain="true" type="danger" icon="delete" @click='deleteFlow()'>删除</el-button>
+                            </el-col>
+                        </el-row>
+                    </el-col>
+                </el-row>
+                <div id="diagram"></div>
+                <codemirror v-model="load.flowchart"></codemirror>
+            </el-col>
+        </el-row> -->
+
+        <div class="ui visible inverted left vertical sidebar menu">
+            <a class="item">
+                <i class="plus icon"></i> New Flow
+            </a>
+            <a class="item" v-for="item in flows">
+                <h4 class="ui header inverted">{{item.name}}</h4> {{item.comment}}
+            </a>
+
+        </div>
+        <div class="pusher">
+            <div class="ui menu">
+                <div class="item">
+                    <div class="ui labeled input">
+                        <div class="ui basic label">
+                            Name
+                        </div>
+                        <input type="text" placeholder="flow's name">
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="ui labeled fluid input">
+                        <div class="ui basic label">
+                            Comment
+                        </div>
+                        <input type="text" placeholder="flow's comment">
+                    </div>
+                </div>
+                <div class="right item">
+                    <div class="ui buttons">
+                        <div class="ui red button" @click='deleteFlow()'>Delete</div>
+                        <div class="or"></div>
+                        <div class="ui positive button" @click='saveFlow()'>Save</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ui basic segment">
+                <h3 class="ui header">Application Content</h3>
+                <div id="diagram"></div>
+                <codemirror v-model="load.flowchart"></codemirror>
+            </div>
+        </div>
+    </div>
+    <script src="http://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+    <script src="js/vue.js"></script>
+    <script src="js/vue-router.js"></script>
+    <!-- <script src="js/element.js"></script> -->
+
+    <script src="js/semantic.min.js"></script>
+    <script src="js/codemirror.js"></script>
+    <script src="js/raphael.js"></script>
+    <script src="js/flowchart.js"></script>
+    <script>
+        var note = new Vue({
+            el: '#app',
+            data: {
+                load: {
+                    name: 'flow1',
+                    comment: 'this is first flow',
+                    createTime: '2016-11-07 20:00:00',
+                    updateTime: '2016-11-07 20:00:00',
+                    flowchart: 'st=>start: 伍|past:>http://www.google.com[blank]\n' +
+                        'e=>end: Ende:>http://www.google.com\n' +
+                        'op1=>operation: My Operation|past\n' +
+                        'op2=>operation: Stuff|current\n' +
+                        'sub1=>subroutine: My Subroutine|invalid\n' +
+                        'cond=>condition: Yes or No?|approved:>http://www.google.com\n' +
+                        'c2=>condition: Good idea|rejected\n' +
+                        'io=>inputoutput: catch something...|request\n' +
+                        'st->op1(right)->cond\n' +
+                        'cond(yes, right)->c2\n' +
+                        'cond(no)->sub1(left)->op1\n'
+                },
+                flows: [{
+                    name: 'flow1',
+                    comment: 'this is first flow',
+                    createTime: '2016-11-07 20:00:00',
+                    updateTime: '2016-11-07 20:00:00',
+                    flowchart: 'A=>B\n '
+                }]
+            },
+            mounted: function() {
+                $('.ui.dropdown').dropdown();
+                var parseText = this.load.flowchart;
+                this.draw(parseText);
+            },
+            updated: function() {
+                try {
+                    document.getElementById('diagram').innerHTML = '';
+                    var parseText = this.load.flowchart;
+                    this.draw(parseText);
+                } catch (err) {
+                    document.getElementById('diagram').innerHTML = 'error';
+                }
+            },
+            methods: {
+                draw: function(flowText) {
+                    var diagram = flowchart.parse(flowText);
+                    diagram.drawSVG('diagram');
+                },
+                addFlow: function() {
+                    var date = new Date();
+                    var time = date.toString();
+                    var flowList = this.flows;
+                    for (var i = 0; i < flowList.length; i++) {
+                        if (flowList[i].name === name) {
+                            break;
+                        }
+                    }
+                    this.$prompt('输入名称:', '新建图表', {
+                        inputPattern: /^\w+$/,
+                        inputErrorMessage: '名称格式错误'
+                    }).then(({
+                        value
+                    }) => {
+                        this.$message({
+                            type: 'success',
+                            message: value + '已创建'
+                        });
+                    }).catch(() => {
+                        this.$message({
+                            type: 'info',
+                            message: '取消输入'
+                        });
+                    });
+                    this.flows.unshift({
+                        name: 'new flowchart',
+                        comment: '',
+                        createTime: time,
+                        updateTime: time,
+                        flowchart: 'A=>B\n '
+                    })
+                    console.info('add Flow Success');
+                },
+                saveFlow: function() {
+                    console.info('save Success');
+                },
+                deleteFlow: function() {
+                    console.info('delete Success');
+                },
+                loadFlow: function(name) {
+                    var flowList = this.flows;
+                    for (var i = 0; i < flowList.length; i++) {
+                        if (flowList[i].name === name) {
+                            this.load = flowList[i];
+                            break;
+                        }
+                    }
+
+                }
+            },
+            components: {
+                'codemirror': {
+                    template: '<textarea></textarea>',
+                    data: function() {
+                        return {
+                            content: ''
+                        }
+                    },
+                    props: {
+                        code: String,
+                        value: String,
+                        options: {
+                            type: Object,
+                            default: function() {
+                                return {
+                                    styleActiveLine: true,
+                                    lineNumbers: true,
+                                    lineWrapping: true
+                                }
+                            }
+                        }
+                    },
+                    ready: function() {
+                        var _this = this
+                        this.editor = CodeMirror.fromTextArea(this.$el, this.options)
+                        this.editor.setValue(this.code || this.value || this.content)
+                        this.editor.on('change', function(cm) {
+                            _this.content = cm.getValue()
+                                // _this.value = cm.getValue()
+                            _this.code = cm.getValue()
+                        })
+                    },
+                    mounted: function() {
+                        var _this = this
+                        this.editor = CodeMirror.fromTextArea(this.$el, this.options)
+                        this.editor.setValue(this.code || this.value || this.content)
+                        this.editor.on('change', function(cm) {
+                            _this.content = cm.getValue()
+                            if (!!_this.$emit) {
+                                _this.$emit('changed', _this.content)
+                                _this.$emit('input', _this.content)
+                            }
+                        })
+                    },
+                    watch: {
+                        'code': function(newVal, oldVal) {
+                            const editor_value = this.editor.getValue()
+                            if (newVal !== editor_value) {
+                                let scrollInfo = this.editor.getScrollInfo()
+                                this.editor.setValue(newVal)
+                                this.content = newVal
+                                this.editor.scrollTo(scrollInfo.left, scrollInfo.top)
+                            }
+                        },
+                        'value': function(newVal, oldVal) {
+                            const editor_value = this.editor.getValue()
+                            if (newVal !== editor_value) {
+                                let scrollInfo = this.editor.getScrollInfo()
+                                this.editor.setValue(newVal)
+                                this.content = newVal
+                                this.editor.scrollTo(scrollInfo.left, scrollInfo.top)
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>

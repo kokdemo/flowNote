@@ -1,19 +1,14 @@
 <html class="no-js">
-
 <head>
-    <!-- <meta charset="utf-8"> -->
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="description" content="">
-    <meta name="keywords" content="">
+    <meta name="description" content="a notebook with flowchart">
+    <meta name="keywords" content="flow chart note">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FlowNote</title>
-    <!-- Set render engine for 360 browser -->
     <meta name="renderer" content="webkit">
-    <!-- <link rel="icon" type="image/png" href="assets/i/favicon.png"> -->
-    <!-- <link rel="stylesheet" href="css/element.css"> -->
-    <!-- <link rel="stylesheet" href="css/normalize.css"> -->
-    <link rel="stylesheet" href="css/codemirror.css">
-    <link rel="stylesheet" href="css/semantic.min.css">
+    <link rel="stylesheet" href="http://cdn.bootcss.com/codemirror/5.20.2/codemirror.min.css">
+    <link rel="stylesheet" href="http://cdn.bootcss.com/semantic-ui/2.2.6/semantic.min.css">
     <style>
         .ui.visible.left.sidebar~.fixed,
         .ui.visible.left.sidebar~.pusher {
@@ -27,8 +22,33 @@
 
         .sidebar {
             width: 180px!important;
+            box-shadow: none!important;
+        }
+        .logo{
+            height:64px;
+            line-height: 64px!important;
+            font-size: 16px;
+            padding-top: 0!important;
+            padding-bottom: 0!important;
+            background-color:#16ab39!important;
+            color: #FFF!important;
         }
 
+        .side-item.active{
+            background-color: #FFF!important;
+        }
+
+        .side-item-name{
+            display: block;
+            padding-bottom: 5px;
+        }
+        .side-item.active .side-item-name{
+            color: #333;
+        }
+        .side-item-comment{
+            font-size: 12px;
+            color: #aaa;
+        }
         .pusher {
             display: flex;
             flex-direction: column;
@@ -41,6 +61,8 @@
             height: 64px;
             width: 100%;
             margin-bottom: 0!important;
+            border-radius: 0!important;
+            box-shadow: none!important;
         }
 
         .note-menu-name {
@@ -57,13 +79,18 @@
 
         .note-main {
             display: flex;
-            /*flex-direction: column;*/
             flex: 1;
         }
 
         #diagram {
             flex: 6;
             overflow: scroll;
+            display: flex;
+        }
+
+        #diagram span{
+            font-size: 24px;
+            margin: auto;
         }
 
         .CodeMirror {
@@ -100,11 +127,12 @@
 <body>
     <div id="app" class="ui bottom attached pushable">
         <div class="ui visible inverted left vertical sidebar menu">
-            <a class="item" @click="addFlow()">
+            <a class="item logo" @click="addFlow()">
                 <i class="plus icon"></i> FlowNote
             </a>
-            <a class="item" v-for="item in flows" @click="loadFlow(item.id)">
-                <h4 class="ui header inverted">{{item.name}}</h4> {{item.comment}}
+            <a class="item side-item" v-bind:class="{active:item.id == load.id}" v-for="item in flows" @click="loadFlow(item.id)">
+                <span class="side-item-name">{{item.name}}</span>
+                <span class="side-item-comment">{{item.comment}}<span>
             </a>
         </div>
         <div class="pusher">
@@ -126,10 +154,13 @@
                     </div>
                 </div>
                 <div class="right item note-menu-button">
+                    <button class="ui icon basic button" @click="exportFlow()" style="margin-right:15px">
+                        <i class="download icon"></i>
+                    </button>
                     <div class="ui buttons">
-                        <div class="ui red button" @click='deleteFlow(load.id)'>Delete</div>
+                        <div class="ui icon button" @click='deleteFlow(load.id)'><i class="delete icon"></i></div>
                         <div class="or"></div>
-                        <div class="ui positive button" @click='saveFlow()'>Save</div>
+                        <div class="ui positive icon button" @click='saveFlow()'><i class="save icon"></i>save</div>
                     </div>
                 </div>
             </div>
@@ -140,12 +171,11 @@
         </div>
     </div>
     <script src="http://cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
-    <script src="js/vue.js"></script>
-    <script src="js/vue-router.js"></script>
-    <script src="js/semantic.min.js"></script>
-    <script src="js/codemirror.js"></script>
-    <script src="js/raphael.js"></script>
-    <script src="js/flowchart.js"></script>
+    <script src="http://cdn.bootcss.com/vue/2.0.7/vue.min.js"></script>
+    <script src="http://cdn.bootcss.com/semantic-ui/2.2.6/semantic.min.js"></script>
+    <script src="http://cdn.bootcss.com/codemirror/5.20.2/codemirror.min.js"></script>
+    <script src="http://cdn.bootcss.com/raphael/2.2.7/raphael.min.js"></script>
+    <script src="http://cdn.bootcss.com/flowchart/1.6.4/flowchart.min.js"></script>
     <script>
         var note = new Vue({
             el: '#app',
@@ -166,7 +196,7 @@
                     var parseText = this.load.flowchart;
                     this.draw(parseText);
                 } catch (err) {
-                    document.getElementById('diagram').innerHTML = 'error';
+                    document.getElementById('diagram').innerHTML = '<span>syntax error</span>';
                 }
             },
             methods: {
@@ -181,10 +211,11 @@
                     var flowList = this.flows;
                     for (var i = 0; i < flowList.length; i++) {
                         if (flowList[i].name === name) {
-                            break;
+                            alert('this flow must have a different name!')
+                            return 0;
                         }
                     }
-                    this.flows.unshift({
+                    this.flows.push({
                         id: id,
                         name: 'new flowchart',
                         comment: '',
@@ -205,18 +236,30 @@
                     console.info('add Flow Success');
                 },
                 saveFlow: function() {
+                    var flowList = this.flows;
+                    for (var i = 0; i < flowList.length; i++) {
+                        if (flowList[i].name.length == 0) {
+                            alert('flow must have a name!');
+                            break;
+                        }else {
+                            this.saveData();
+                        }
+                    }
                     console.info('save Success');
-                    this.saveData();
                 },
                 deleteFlow: function(id) {
                     var flowList = this.flows;
                     for (var i = 0; i < flowList.length; i++) {
                         if (flowList[i].id === id) {
                             this.flows.splice(i,1);
-                            this.load = this.flows[i];
+                            this.load = this.flows[i-1];
                             this.saveData();
                             break;
                         }
+                    }
+                    if(this.flows.length == 0){
+                        alert("you can't delete all flows, there is a new one.");
+                        this.addFlow();
                     }
                     console.info('delete Success');
                 },
@@ -228,6 +271,33 @@
                             break;
                         }
                     }
+                },
+                exportFlow:function() {
+                    var svgString = new XMLSerializer().serializeToString(document.querySelector('svg'));
+                    var img = new Image();
+                    var svg = new Blob([svgString], {type: "image/svg+xml;charset=utf-8"});
+                    var DOMURL = self.URL || self.webkitURL || self;
+                    var url = DOMURL.createObjectURL(svg);
+                    img.src = url;
+                    img.onload = function () {
+                        var canvas = document.createElement('canvas');
+                        canvas.width = document.querySelector('svg').width.baseVal.value;
+                        canvas.height = document.querySelector('svg').height.baseVal.value;
+                        var ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        var type = 'png';
+                        var filename = 'FlowNote' + (new Date()).getTime() + '.' + type;
+                        var imgData = canvas.toDataURL(type);
+                        var r = 'image/' + type.match(/png|jpeg|bmp|gif/)[0];
+                        imgData = imgData.replace(r, 'image/octet-stream');
+                        var save_link = document.createElementNS('http://www.w3.org/1999/xhtml', 'a');
+                        save_link.href = imgData;
+                        save_link.download = filename;
+                        var event = document.createEvent('MouseEvents');
+                        event.initMouseEvent('click', true, false, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+                        save_link.dispatchEvent(event);
+                    };
+
                 },
                 saveData: function () {
                     localStorage.flowNote = JSON.stringify(this.flows);

@@ -85,7 +85,6 @@
         #diagram {
             flex: 6;
             overflow: scroll;
-            display: flex;
         }
 
         #diagram span{
@@ -140,7 +139,7 @@
                 <div class="item note-menu-name">
                     <div class="ui labeled input">
                         <div class="ui basic label">
-                            Name
+                            name
                         </div>
                         <input type="text" placeholder="flow's name" v-model="load.name">
                     </div>
@@ -148,7 +147,7 @@
                 <div class="item note-menu-comment">
                     <div class="ui labeled fluid input">
                         <div class="ui basic label">
-                            Comment
+                            comment
                         </div>
                         <input type="text" placeholder="flow's comment" v-model="load.comment">
                     </div>
@@ -164,7 +163,7 @@
                     </div>
                 </div>
             </div>
-            <div class="ui basic note-main">
+            <div class="ui basic note-main" v-on:keyup="resetTimer()">
                 <div id="diagram"></div>
                 <codemirror v-model="load.flowchart"></codemirror>
             </div>
@@ -181,7 +180,8 @@
             el: '#app',
             data: {
                 load: {},
-                flows: []
+                flows: [],
+                lazy:undefined
             },
             mounted: function() {
                 $('.ui.dropdown').dropdown();
@@ -191,18 +191,24 @@
                 this.draw(parseText);
             },
             updated: function() {
-                try {
-                    document.getElementById('diagram').innerHTML = '';
-                    var parseText = this.load.flowchart;
-                    this.draw(parseText);
-                } catch (err) {
-                    document.getElementById('diagram').innerHTML = '<span>syntax error</span>';
-                }
             },
             methods: {
                 draw: function(flowText) {
                     var diagram = flowchart.parse(flowText);
                     diagram.drawSVG('diagram');
+                },
+                resetTimer:function () {
+                    var chart = this;
+                    window.clearTimeout(chart.lazy);
+                    try {
+                        chart.lazy = setTimeout(function () {
+                            document.getElementById('diagram').innerHTML = '';
+                            var parseText = chart.load.flowchart;
+                            chart.draw(parseText);
+                        },500)
+                    }catch (err){
+                        document.getElementById('diagram').innerHTML = '<span>syntax error</span>';
+                    }
                 },
                 addFlow: function() {
                     var date = new Date();
